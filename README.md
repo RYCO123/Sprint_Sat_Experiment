@@ -50,7 +50,7 @@ Traditional satellites must balance power generation with orbital longevity. The
 ### Setup
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/sprint-satellite.git
+git clone https://github.com/RYCO123/Sprint_Sat_Experiment
 cd sprint-satellite
 ```
 
