@@ -1,6 +1,9 @@
 import numpy as np
 from constants import MU, R_EARTH, TETHER_LENGTH, TETHER_DIAMETER, TETHER_RESISTIVITY, CIRCUIT_RESISTANCE
 from helpers import get_geodetic_coords, get_magnetic_field_bgs
+from astropy.coordinates import EarthLocation, ITRS, GCRS, TETE
+from astropy.time import Time
+import astropy.units as u
 
 def orbital_ode_standard(t, state, satellite, sim_datetime, sun_vector, f107a, f107, ap):
     """
@@ -82,11 +85,28 @@ def calculate_mhd_drag_in_ode(state, sim_datetime, f107a, f107, ap):
     
     # Transform to ECI coordinates
     lat_rad, lon_rad = np.radians(lat_deg), np.radians(lon_deg)
+
+
+
+
     clat, slat, clon, slon = np.cos(lat_rad), np.sin(lat_rad), np.cos(lon_rad), np.sin(lon_rad)
     C_ned_to_eci = np.array([[-slat*clon, -slon, -clat*clon], 
                             [-slat*slon, clon, -clat*slon], 
                             [clat, 0.0, -slat]])
-    b_eci = C_ned_to_eci @ b_ned_T
+
+    b_ecef = C_ned_to_eci @ b_ned_T * u.T # Add units for astropy
+
+    location = EarthLocation.from_geodetic(lon_deg*u.deg, lat_deg*u.deg, alt_m*u.m)
+    time = Time(sim_datetime)
+
+    frame_itrs = ITRS(x=location.x, y=location.y, z=location.z, 
+                    v_x=b_ecef[0], v_y=b_ecef[1], v_z=b_ecef[2],
+                    obstime=time)
+
+    frame_gcrs = frame_itrs.transform_to(GCRS(obstime=time))
+
+    b_eci = frame_gcrs.velocity.d_xyz.to(u.T).value                   
+
     
     # Calculate tether vector (nadir-pointing)
     r_sat = state[:3]

@@ -2,8 +2,9 @@ import numpy as np
 import pandas as pd
 from scipy.integrate import solve_ivp
 from datetime import datetime, timedelta
-from tqdm import tqdm
-
+from tqdm.auto import tqdm
+from datetime import datetime
+import os
 from constants import TIME_STEP, SIMULATION_START_DATE, TERMINATION_ALTITUDE
 from satellite import Satellite
 from ODE import get_ode_function
@@ -60,29 +61,66 @@ class Simulation:
         
         print("Solving ODE for MHD Sprint Satellite...")
         # Solve ODE for MHD satellite
-        solution_mhd = solve_ivp(
-            fun=lambda t, y: mhd_ode(t, y, self.mhd_sat, sim_datetime, 
-                                   calculate_sun_vector(t), f107a, f107, ap),
-            t_span=t_span,
-            y0=y0_mhd,
-            method='RK45',
-            t_eval=t_eval,
-            rtol=1e-8,
-            atol=1e-10
-        )
+        with tqdm(total=t_span[1], desc="MHD Sprint Sat", unit="s") as pbar:
+        # This wrapper function will update the progress bar
+            # def mhd_ode_with_progress(t, y, *args):
+            #     # Update the progress bar to the current time `t`
+            #     pbar.update(t - pbar.n)
+            #     # Call the original ODE function
+            #     return mhd_ode(t, y, *args)
+
+
+
+            # solution_mhd = solve_ivp(
+            #     fun=lambda t, y: mhd_ode_with_progress(t, y, self.mhd_sat, sim_datetime, 
+            #                         calculate_sun_vector(t), f107a, f107, ap),
+            #     t_span=t_span,
+            #     y0=y0_mhd,
+            #     method='RK45',
+            #     t_eval=t_eval,
+            #     rtol=1e-8,
+            #     atol=1e-10
+            # )
         
+
+            def solar_ode_with_progress(t, y, *args):
+                # Update the progress bar to the current time `t`
+                pbar.update(t - pbar.n)
+                # Call the original ODE function
+                return solar_ode(t, y, *args)
+
+            # Solve ODE for solar satellite, using our new wrapper function
+            solution_mhd = solve_ivp(
+                fun=lambda t, y: solar_ode_with_progress(t, y, self.solar_sat, sim_datetime, 
+                                        calculate_sun_vector(t), f107a, f107, ap),
+                t_span=t_span,
+                y0=y0_solar,
+                method='RK45',
+                t_eval=t_eval,
+                rtol=1e-8,
+                atol=1e-10
+            )
         print("Solving ODE for Standard Solar Satellite...")
-        # Solve ODE for solar satellite
-        solution_solar = solve_ivp(
-            fun=lambda t, y: solar_ode(t, y, self.solar_sat, sim_datetime, 
-                                     calculate_sun_vector(t), f107a, f107, ap),
-            t_span=t_span,
-            y0=y0_solar,
-            method='RK45',
-            t_eval=t_eval,
-            rtol=1e-8,
-            atol=1e-10
-        )
+
+        with tqdm(total=t_span[1], desc="Standard Solar Sat", unit="s") as pbar:
+            # This wrapper function will update the progress bar
+            def solar_ode_with_progress(t, y, *args):
+                # Update the progress bar to the current time `t`
+                pbar.update(t - pbar.n)
+                # Call the original ODE function
+                return solar_ode(t, y, *args)
+
+            # Solve ODE for solar satellite, using our new wrapper function
+            solution_solar = solve_ivp(
+                fun=lambda t, y: solar_ode_with_progress(t, y, self.solar_sat, sim_datetime, 
+                                        calculate_sun_vector(t), f107a, f107, ap),
+                t_span=t_span,
+                y0=y0_solar,
+                method='RK45',
+                t_eval=t_eval,
+                rtol=1e-8,
+                atol=1e-10
+            )
         
         # Process results
         self.process_results(solution_mhd, solution_solar, sim_datetime, f107a, f107, ap)
@@ -131,7 +169,10 @@ class Simulation:
     def generate_plots(self):
         """Generate comparison plots."""
         print("Generating comparison plots...")
-        
+
+        if not os.path.exists('plots'):
+            os.makedirs('plots')
+
         # 2D orbital trajectories
         plot_orbital_trajectories_2d(self.mhd_states, self.solar_states, 'plots/orbital_trajectories_2d.png')
         
@@ -320,8 +361,8 @@ def main():
     sim = Simulation()
     
     # Run simulation for 1 week with 3000 discrete time steps
-    t_span = (0, 7 * 24 * 3600)  # 1 week in seconds (168 hours)
-    num_steps = 3000  # Exactly 3000 time steps
+    t_span = (0, 90*60)  # 1 week in seconds (168 hours)
+    num_steps = 30  # Exactly 3000 time steps
     
     # Run simulation
     sim.run_simulation(t_span, num_steps)
