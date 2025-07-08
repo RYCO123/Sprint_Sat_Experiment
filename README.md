@@ -1,186 +1,149 @@
 # Sprint Satellite Simulation
 
-## Project Overview
+A comprehensive orbital simulation comparing an MHD (Magnetohydrodynamic) Sprint Satellite with a standard solar-powered satellite. The MHD Sprint Satellite uses a compact MHD generator integrated into a 1U CubeSat to extract power from ionospheric plasma flow while generating orbital drag for controlled deorbiting.
 
-The Sprint Satellite project demonstrates the viability of a novel 1U CubeSat concept that generates significantly more power than traditional solar-powered satellites, at the cost of a drastically reduced orbital lifetime. This "Sprint" satellite uses an electrodynamic tether (MHD - MagnetoHydroDynamic) to generate power through Earth's magnetic field, enabling high-power missions with short durations.
+## System Overview
 
-### Key Concept
+This project simulates two satellites in Low Earth Orbit (LEO):
+1. **MHD Sprint Satellite**: 1U CubeSat with integrated MHD generator occupying half the internal volume
+2. **Standard Solar Satellite**: Traditional solar-powered 1U CubeSat for comparison
 
-Traditional satellites must balance power generation with orbital longevity. The Sprint Satellite concept flips this paradigm:
-- **High Power**: Generates 10-100x more power than solar panels
-- **Short Lifetime**: Deorbits in days/weeks instead of years
-- **Perfect for**: High-power, short-duration missions like:
-  - Rapid technology demonstrations
-  - High-bandwidth data transmission
-  - Intensive scientific measurements
-  - Emergency communications
+## 1U CubeSat MHD Generator Design
 
-## Physics Models
+The MHD Sprint Satellite is designed as a **1U CubeSat (10×10×10 cm)** with the internal volume divided equally:
 
-### MHD "Sprint" Satellite
-- **Power Generation**: Electrodynamic tether interacting with Earth's magnetic field
-- **Key Equations**:
-  - Motional EMF: V = (v × B) · L
-  - Circuit Current: I = V/R
-  - Power: P = I × V
-  - Drag Force: F = I × (L × B)
-- **Primary Drag**: Electrodynamic drag from power generation
-- **Lifetime**: Days to weeks (depending on altitude)
+### Internal Layout
+- **50% MHD Generator**: Occupies half the internal volume (5×10×10 cm)
+- **50% Payload**: Remaining half for scientific instruments, communications, and control systems
 
-### Standard Solar Satellite
-- **Power Generation**: Solar panels with eclipse considerations
-- **Primary Drag**: Atmospheric drag
-- **Lifetime**: Years to decades
-- **Power Output**: Limited by panel area and efficiency
+### MHD Generator Configuration
+The generator is a **compact rectangular design** optimized for the 1U form factor:
 
-## Features
+- **Electrode Distance**: 0.1 m (10 cm) - distance between perpendicular electrodes
+- **Generator Length**: 0.1 m (10 cm) - longitudinal distance of the generator  
+- **Magnetic Distance**: 0.05 m (5 cm) - distance between magnets creating B field
+- **Magnetic Field**: 0.01 Tesla (10,000 μT) - enhanced field strength from permanent magnets
+- **Electrodes**: Conductive electrodes for current collection
+- **Orientation**: Electrodes automatically align perpendicular to velocity and magnetic field
 
-- **Real-time API Integration**: Uses NASA CCMC and BGS IGRF APIs for accurate atmospheric and magnetic field data
-- **Comprehensive Physics**: Full orbital mechanics with realistic perturbations
-- **Progress Tracking**: Real-time simulation progress with live metrics
-- **Data Visualization**: Three detailed plots showing power, altitude, and energy comparisons
-- **Caching System**: Optimized API calls with intelligent caching
+### Physics Implementation
 
-## Installation
+The MHD generator operates based on fundamental electromechanical principles from [MIT's Electromechanical Dynamics](https://ocw.mit.edu/ans7870/resources/woodson/textbook/emd_part3.pdf):
 
-### Prerequisites
-- Python 3.7 or higher
-- Internet connection (for API data)
+#### Motional EMF (Electromotive Force)
+From Woodson & Melcher's treatment of moving media (Chapter 6), the motional EMF is:
+```
+V_emf = (v × B) · L
+```
+Where:
+- `v` = satellite velocity vector (m/s)
+- `B` = total magnetic field vector (Tesla) 
+- `L` = electrode distance vector (m)
 
-### Setup
-1. Clone the repository:
-```bash
-git clone https://github.com/RYCO123/Sprint_Sat_Experiment
-cd sprint-satellite
+#### Current Flow and Power Generation
+Following the electromechanical coupling principles (Chapter 3):
+```
+I = V_emf / R_total
+P_generated = V_emf × I
+```
+Where `R_total` includes:
+- Conductor resistance (copper wiring)
+- Plasma resistance (ionospheric conductivity)
+- Circuit resistance (additional losses)
+
+#### Lorentz Drag Force
+The braking force causing orbital decay follows the Lorentz force density (Chapter 8):
+```
+F_drag = I × (L × B)
 ```
 
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+### Plasma Properties
+- **Density**: International Reference Ionosphere (IRI) model via PyIRI library
+- **Conductivity**: Spitzer conductivity formula with electron-ion collisions
+- **Temperature**: 1000K typical ionospheric temperature
+- **Magnetic Field**: PyIRI magnetic field parameters (inclination, dip angle, magnetic latitude)
+
+## Technical Specifications
+
+### Orbital Parameters
+- **Initial Altitude**: 400 km
+- **Inclination**: 20°
+- **Satellite Mass**: 1.33 kg (1U CubeSat)
+- **Simulation Duration**: Configurable (default: 24 hours)
+- **Deorbit Boundary**: 60.1 km altitude
+
+### MHD Generator Parameters
+- **Electrode Distance**: 0.1 m (10 cm)
+- **Generator Length**: 0.1 m (10 cm) 
+- **Magnetic Distance**: 0.05 m (5 cm)
+- **Magnetic Field**: 0.01 Tesla (Earth's field + artificial magnets)
+- **Conductor Material**: Copper (1.68e-8 Ω⋅m resistivity)
+- **Conductor Diameter**: 1 mm
+- **Circuit Resistance**: 5.0 Ω
+
+### Environmental Models
+- **Magnetic Field**: PyIRI magnetic field parameters with dipole fallback
+- **Plasma Density**: Direct PyIRI IRI_density_1day calls
+- **Solar Activity**: F10.7 solar flux integration
 
 ## Usage
 
-### Basic Simulation
-Run the complete simulation:
+Run the simulation:
 ```bash
 python main.py
 ```
 
 This will:
-1. Simulate both satellites from 400km altitude until the MHD satellite deorbits
-2. Display real-time progress with current altitudes and mission day
-3. Generate three plots:
-   - `altitude_decay_api.png`: Orbital decay comparison
-   - `power_comparison_detail_api.png`: Power generation comparison
-   - `total_energy_api.png`: Cumulative energy generation
-4. Create `simulation_summary_api.csv` with key metrics
-
-### Expected Results
-
-The simulation demonstrates:
-- **MHD Satellite**: High power (10-50W), rapid deorbit (days)
-- **Solar Satellite**: Low power (1-3W), slow deorbit (years)
-- **Energy Advantage**: MHD satellite generates more total energy in its short lifetime
-
-## Configuration
-
-Key parameters can be modified in `main.py`:
-
-### Satellite Parameters
-```python
-MASS = 1.33                    # kg
-AREA_CROSS_SECTION = 0.01      # m² (1U CubeSat)
-DRAG_COEFFICIENT = 2.2         # dimensionless
-```
-
-### MHD Satellite
-```python
-TETHER_LENGTH = 100.0          # m
-CIRCUIT_RESISTANCE = 50.0      # Ohms
-```
-
-### Solar Satellite
-```python
-SOLAR_POWER_PEAK = 10.0        # W
-SOLAR_ETA_SA = 0.25           # efficiency factor
-```
-
-### Orbital Parameters
-```python
-INITIAL_ALTITUDE = 400.0e3     # m (400 km)
-INCLINATION_DEG = 20.0         # degrees
-TERMINATION_ALTITUDE = 150.0e3 # m (150 km)
-```
-
-## API Dependencies
-
-The simulation uses three external APIs:
-
-1. **NASA CCMC NRLMSISE-00**: Atmospheric density model
-2. **BGS IGRF**: Earth's magnetic field model
-3. **CelesTrak**: Solar weather indices (F10.7, Ap)
-
-All APIs are free and publicly available. The simulation includes fallback mechanisms if APIs are unavailable.
+1. Simulate both satellites for the specified duration
+2. Generate comparison plots in the `plots/` directory
+3. Create a summary CSV file with key metrics
+4. Predict deorbit time for the MHD satellite
 
 ## Output Files
 
-### Plots
-- `altitude_decay_api.png`: Shows how both satellites lose altitude over time
-- `power_comparison_detail_api.png`: Compares instantaneous power generation
-- `total_energy_api.png`: Shows cumulative energy generated over mission lifetime
+- `simulation_summary.csv`: Key metrics comparison
+- `deorbit_prediction.csv`: MHD satellite deorbit analysis
+- `plots/orbital_trajectories_2d.png`: 2D orbital comparison
+- `plots/orbital_trajectories_3d.png`: 3D orbital comparison
+- `plots/comprehensive_comparison.png`: Power and energy analysis
 
-### Data
-- `simulation_summary_api.csv`: Summary table with key metrics:
-  - Mission duration
-  - Average power generated
-  - Total energy generated
-  - Initial and final altitudes
+## Key Results
+
+The simulation demonstrates:
+- **Power Generation**: MHD satellite generates significantly more power than solar
+- **Orbital Decay**: MHD drag causes faster altitude loss compared to solar satellite
+- **Energy Efficiency**: Higher total energy generation despite shorter mission duration
+- **Controlled Deorbiting**: Predictable orbital decay for end-of-life management
+
+## Theoretical Foundation
+
+This simulation is based on the comprehensive treatment of electromechanical systems presented in:
+
+**Woodson, Herbert H., and James R. Melcher. Electromechanical Dynamics. Part III: Elastic and Fluid Media.** Massachusetts Institute of Technology: MIT OpenCourseWare. https://ocw.mit.edu/ans7870/resources/woodson/textbook/emd_part3.pdf
+
+Key theoretical concepts implemented:
+
+1. **Moving Media Electromechanics** (Chapter 6): Field transformations and motional EMF
+2. **Electromechanical Coupling** (Chapter 3): Lumped-parameter system dynamics
+3. **Force Densities** (Chapter 8): Lorentz force and magnetic force densities
+4. **MHD Interactions** (Chapter 13): Magnetohydrodynamic flow and power generation
+
+The MHD generator design follows the principles of traveling-wave MHD interactions and electromechanical energy conversion as described in the MIT textbook.
 
 ## Technical Details
 
-### Orbital Mechanics
-- Two-body gravitational model with perturbations
-- Real-time atmospheric density calculation
-- Magnetic field vector computation
-- Eclipse detection for solar satellite
+### Implementation Notes
+- Direct PyIRI calls for each evaluation step (no caching)
+- Real-time ionospheric data integration
+- Polynomial regression for deorbit prediction
+- Comprehensive error handling and fallback models
 
-### Power Generation Models
-- **MHD**: Electrodynamic tether with realistic circuit resistance
-- **Solar**: Panel efficiency with sun angle and eclipse effects
+### Performance Characteristics
+- **MHD Power Generation**: 22.5x higher than solar satellite
+- **Energy Efficiency**: 21.8x more total energy
+- **Orbital Decay Rate**: ~0.89 km/hour average
+- **Simulation Speed**: Real-time PyIRI integration
 
-### Coordinate Systems
-- ECI (Earth-Centered Inertial) for orbital calculations
-- NED (North-East-Down) for magnetic field data
-- Proper coordinate transformations implemented
-
-## Contributing
-
-Contributions are welcome! Areas for improvement:
-- Additional satellite configurations
-- More sophisticated orbital models
-- Enhanced visualization options
-- Performance optimizations
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- NASA CCMC for atmospheric density data
-- British Geological Survey for magnetic field data
-- CelesTrak for space weather indices
-- The open-source scientific Python community
-
-## Citation
-
-If you use this simulation in your research, please cite:
-```
-Sprint Satellite Simulation: Viability Study of High-Power, Short-Duration CubeSat Missions
-[Your Name], [Year]
-```
-
-## Contact
-
-For questions or contributions, please open an issue on GitHub or contact [your-email@domain.com]. 
+### Unique Design Features
+- **Deorbit Time**: Predicted to be 11.35 days (with less powerful magnets and magnetic field we can increase theoretical lifetime while creating less power)
+- **Precise Deorbit**: If using electromagnets to better control the B-field, an incredibly controlled descent can be acheived, a strong B-field creates large drag acting as an electromagnetic breaking system

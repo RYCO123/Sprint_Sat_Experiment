@@ -1,64 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from constants import R_EARTH
+from constants import R_EARTH, TERMINATION_ALTITUDE
 
-def plot_2D_orbit_animation(x_orbit, y_orbit, satellite_height, R_EARTH):
-    """
-    Plots and animates a satellite's orbit.
-
-    Args:
-        x_orbit (array-like): X coordinates of the orbit.
-        y_orbit (array-like): Y coordinates of the orbit.
-        satellite_height (float): Initial orbital height (in meters).
-        R_EARTH (float): Radius of Earth (in meters).
-    """
-    fig, ax = plt.subplots()
-    ax.set_aspect('equal')
-    ax.set_title('Satellite Orbit Animation')
-    ax.set_xlabel('X Position (meters)')
-    ax.set_ylabel('Y Position (meters)')
-    ax.grid(True, linestyle='--', alpha=0.6)
-
-    earth_circle = plt.Circle((0, 0), R_EARTH, color='deepskyblue', zorder=5)
-    ax.add_patch(earth_circle)
-
-    ax.plot(x_orbit, y_orbit, 'w--', alpha=0.8, label='Orbit Path')
-    satellite_point, = ax.plot([], [], 'ro', markersize=6, label='Satellite')
-
-    max_range = (R_EARTH + satellite_height) * 1.1
-    ax.set_xlim(-max_range, max_range)
-    ax.set_ylim(-max_range, max_range)
-
-    fig.set_facecolor('#1c1c1c')
-    ax.set_facecolor('#2b2b2b')
-    ax.tick_params(axis='x', colors='white')
-    ax.tick_params(axis='y', colors='white')
-    ax.xaxis.label.set_color('white')
-    ax.yaxis.label.set_color('white')
-    ax.title.set_color('white')
-
-    def init():
-        satellite_point.set_data([], [])
-        return satellite_point,
-
-    def update(frame):
-        satellite_point.set_data([x_orbit[frame]], [y_orbit[frame]])
-        return satellite_point,
-
-    ani = animation.FuncAnimation(
-        fig,
-        update,
-        frames=len(x_orbit),
-        init_func=init,
-        blit=True,
-        interval=30
-    )
-
-    ax.legend()
-    plt.show()
-
-def plot_power_comparison(time_data, mhd_power, solar_power, save_path='power_comparison.png'):
+def plot_power_comparison(time_data, mhd_power, solar_power, save_path='plots/power_comparison.png'):
     """
     Plot power generation comparison between MHD and solar satellites.
     
@@ -92,7 +36,7 @@ def plot_power_comparison(time_data, mhd_power, solar_power, save_path='power_co
     plt.close()
     print(f"Power comparison plot saved to {save_path}")
 
-def plot_total_energy_comparison(time_data, mhd_energy, solar_energy, save_path='total_energy_comparison.png'):
+def plot_total_energy_comparison(time_data, mhd_energy, solar_energy, save_path='plots/energy_comparison.png'):
     """
     Plot total energy generation comparison between MHD and solar satellites.
     
@@ -128,7 +72,7 @@ def plot_total_energy_comparison(time_data, mhd_energy, solar_energy, save_path=
     plt.close()
     print(f"Total energy comparison plot saved to {save_path}")
 
-def plot_orbital_trajectories_2d(mhd_states, solar_states, save_path='orbital_trajectories_2d.png'):
+def plot_orbital_trajectories_2d(mhd_states, solar_states, save_path='plots/orbital_trajectories_2d.png'):
     """
     Plot 2D orbital trajectories of both satellites.
     
@@ -172,7 +116,7 @@ def plot_orbital_trajectories_2d(mhd_states, solar_states, save_path='orbital_tr
     plt.close()
     print(f"2D orbital trajectories plot saved to {save_path}")
 
-def plot_orbital_trajectories_3d(mhd_states, solar_states, save_path='orbital_trajectories_3d.png'):
+def plot_orbital_trajectories_3d(mhd_states, solar_states, save_path='plots/orbital_trajectories_3d.png'):
     """
     Plot 3D orbital trajectories of both satellites.
     
@@ -224,7 +168,7 @@ def plot_orbital_trajectories_3d(mhd_states, solar_states, save_path='orbital_tr
     plt.close()
     print(f"3D orbital trajectories plot saved to {save_path}")
 
-def plot_altitude_comparison(time_data, mhd_states, solar_states, save_path='altitude_comparison.png'):
+def plot_altitude_comparison(time_data, mhd_states, solar_states, save_path='plots/altitude_comparison.png'):
     """
     Plot altitude comparison between both satellites.
     
@@ -245,7 +189,9 @@ def plot_altitude_comparison(time_data, mhd_states, solar_states, save_path='alt
     plt.plot(time_hours, solar_altitudes, label='Standard Solar Satellite', linewidth=2, color='blue')
     
     # Add termination altitude line
-    plt.axhline(y=150, color='gray', linestyle='--', alpha=0.7, label='Termination Altitude (150 km)')
+    termination_alt_km = TERMINATION_ALTITUDE / 1000  # Convert to km
+    plt.axhline(y=termination_alt_km, color='gray', linestyle='--', alpha=0.7, 
+                label=f'Deorbit Boundary ({termination_alt_km:.0f} km)')
     
     plt.xlabel('Time (hours)')
     plt.ylabel('Altitude (km)')
@@ -267,7 +213,7 @@ def plot_altitude_comparison(time_data, mhd_states, solar_states, save_path='alt
     print(f"Altitude comparison plot saved to {save_path}")
 
 def create_comprehensive_comparison(time_data, mhd_states, solar_states, mhd_power, solar_power, 
-                                  mhd_energy, solar_energy, save_path='comprehensive_comparison.png'):
+                                  mhd_energy, solar_energy, save_path='plots/comprehensive_comparison.png'):
     """
     Create a comprehensive comparison plot with all metrics.
     
@@ -295,7 +241,8 @@ def create_comprehensive_comparison(time_data, mhd_states, solar_states, mhd_pow
     # Plot 1: Altitude comparison
     ax1.plot(time_hours, mhd_altitudes, label='MHD Sprint', linewidth=2, color='red')
     ax1.plot(time_hours, solar_altitudes, label='Standard Solar', linewidth=2, color='blue')
-    ax1.axhline(y=150, color='gray', linestyle='--', alpha=0.7, label='Termination')
+    termination_alt_km = TERMINATION_ALTITUDE / 1000
+    ax1.axhline(y=termination_alt_km, color='gray', linestyle='--', alpha=0.7, label='Deorbit Boundary')
     ax1.set_xlabel('Time (hours)')
     ax1.set_ylabel('Altitude (km)')
     ax1.set_title('Altitude Decay')

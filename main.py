@@ -48,6 +48,9 @@ class Simulation:
         sim_datetime = datetime.strptime(SIMULATION_START_DATE, "%Y-%m-%d")
         f107a, f107, ap = get_space_weather_data(sim_datetime)
         
+        # Use direct PyIRI calls for plasma density and magnetic field
+        print("Using direct PyIRI calls for ionospheric data")
+        
         # Get ODE functions
         mhd_ode = get_ode_function(is_sprint_sat=True)
         solar_ode = get_ode_function(is_sprint_sat=False)
@@ -62,46 +65,26 @@ class Simulation:
         print("Solving ODE for MHD Sprint Satellite...")
         # Solve ODE for MHD satellite
         with tqdm(total=t_span[1], desc="MHD Sprint Sat", unit="s") as pbar:
-        # This wrapper function will update the progress bar
-            # def mhd_ode_with_progress(t, y, *args):
-            #     # Update the progress bar to the current time `t`
-            #     pbar.update(t - pbar.n)
-            #     # Call the original ODE function
-            #     return mhd_ode(t, y, *args)
-
-
-
-            # solution_mhd = solve_ivp(
-            #     fun=lambda t, y: mhd_ode_with_progress(t, y, self.mhd_sat, sim_datetime, 
-            #                         calculate_sun_vector(t), f107a, f107, ap),
-            #     t_span=t_span,
-            #     y0=y0_mhd,
-            #     method='RK45',
-            #     t_eval=t_eval,
-            #     rtol=1e-8,
-            #     atol=1e-10
-            # )
-        
-
-            def solar_ode_with_progress(t, y, *args):
+            # This wrapper function will update the progress bar
+            def mhd_ode_with_progress(t, y, *args):
                 # Update the progress bar to the current time `t`
                 pbar.update(t - pbar.n)
                 # Call the original ODE function
-                return solar_ode(t, y, *args)
+                return mhd_ode(t, y, *args)
 
-            # Solve ODE for solar satellite, using our new wrapper function
+            # Solve ODE for MHD satellite, using our new wrapper function
             solution_mhd = solve_ivp(
-                fun=lambda t, y: solar_ode_with_progress(t, y, self.solar_sat, sim_datetime, 
+                fun=lambda t, y: mhd_ode_with_progress(t, y, self.mhd_sat, sim_datetime, 
                                         calculate_sun_vector(t), f107a, f107, ap),
                 t_span=t_span,
-                y0=y0_solar,
+                y0=y0_mhd,
                 method='RK45',
                 t_eval=t_eval,
                 rtol=1e-8,
                 atol=1e-10
             )
+        
         print("Solving ODE for Standard Solar Satellite...")
-
         with tqdm(total=t_span[1], desc="Standard Solar Sat", unit="s") as pbar:
             # This wrapper function will update the progress bar
             def solar_ode_with_progress(t, y, *args):
@@ -153,18 +136,22 @@ class Simulation:
             power_mhd = self.mhd_sat.calculate_power(state_mhd, sim_datetime, sun_vector, f107a, f107, ap)
             power_solar = self.solar_sat.calculate_power(state_solar, sim_datetime, sun_vector, f107a, f107, ap)
             
+            # Ensure powers are scalars
+            power_mhd_scalar = float(power_mhd) if hasattr(power_mhd, '__iter__') else float(power_mhd)
+            power_solar_scalar = float(power_solar) if hasattr(power_solar, '__iter__') else float(power_solar)
+            
             # Log data
-            self.mhd_sat.log_step(t, state_mhd, power_mhd)
-            self.solar_sat.log_step(t, state_solar, power_solar)
+            self.mhd_sat.log_step(t, state_mhd, power_mhd_scalar)
+            self.solar_sat.log_step(t, state_solar, power_solar_scalar)
             
             # Store data for plotting
             self.time_data.append(t)
             self.mhd_states.append(state_mhd)
             self.solar_states.append(state_solar)
-            self.mhd_power.append(power_mhd)
-            self.solar_power.append(power_solar)
-            self.mhd_energy.append(self.mhd_sat.total_energy_J)
-            self.solar_energy.append(self.solar_sat.total_energy_J)
+            self.mhd_power.append(power_mhd_scalar)
+            self.solar_power.append(power_solar_scalar)
+            self.mhd_energy.append(float(self.mhd_sat.total_energy_J))
+            self.solar_energy.append(float(self.solar_sat.total_energy_J))
     
     def generate_plots(self):
         """Generate comparison plots."""
@@ -259,18 +246,61 @@ class Simulation:
         self.predict_deorbit_time()
     
     def predict_deorbit_time(self):
-        """Use polynomial regression to predict when the sprint satellite will deorbit."""
-        print(f"\n--- Deorbit Prediction Analysis ---")
+        """Use polynomial regression to predict when the MHD sprint satellite will deorbit."""
+        print(f"\n--- MHD Sprint Satellite Deorbit Prediction Analysis ---")
         
         if not self.time_data or len(self.time_data) < 10:
             print("Insufficient data for deorbit prediction.")
             return
         
-        # Calculate altitudes over time
+        # Calculate altitudes over time for MHD satellite specifically
         time_hours = np.array(self.time_data) / 3600
         altitudes = np.array([np.linalg.norm(state[:3]) - 6371000 for state in self.mhd_states]) / 1000  # km
         
-        # Calculate velocities and accelerations
+        # Check if satellite has already deorbited during simulation
+        min_altitude = np.min(altitudes)
+        current_altitude = altitudes[-1]
+        
+        print(f"Current MHD satellite altitude: {current_altitude:.2f} km")
+        print(f"Minimum altitude reached: {min_altitude:.2f} km")
+        print(f"Deorbit boundary: {TERMINATION_ALTITUDE/1000:.1f} km")
+        
+        # If satellite has already gone below deorbit boundary, it has deorbited
+        if min_altitude <= TERMINATION_ALTITUDE/1000:
+            # Find when it first crossed the deorbit boundary
+            deorbit_index = np.where(altitudes <= TERMINATION_ALTITUDE/1000)[0]
+            if len(deorbit_index) > 0:
+                first_deorbit_time = time_hours[deorbit_index[0]]
+                print(f"MHD satellite has already deorbited!")
+                print(f"Deorbit occurred at: {first_deorbit_time:.2f} hours ({first_deorbit_time/24:.2f} days)")
+                print(f"Altitude at deorbit: {altitudes[deorbit_index[0]]:.2f} km")
+                
+                # Save deorbit data
+                deorbit_data = {
+                    'Metric': [
+                        'Deorbit Status',
+                        'Deorbit Time (hours)',
+                        'Deorbit Time (days)',
+                        'Altitude at Deorbit (km)',
+                        'Deorbit Boundary (km)',
+                        'Simulation Duration (hours)'
+                    ],
+                    'Value': [
+                        'DEORBITED',
+                        f"{first_deorbit_time:.2f}",
+                        f"{first_deorbit_time/24:.2f}",
+                        f"{altitudes[deorbit_index[0]]:.2f}",
+                        f"{TERMINATION_ALTITUDE/1000:.1f}",
+                        f"{time_hours[-1]:.2f}"
+                    ]
+                }
+                
+                deorbit_df = pd.DataFrame(deorbit_data)
+                deorbit_df.to_csv('deorbit_prediction.csv', index=False)
+                print(f"Deorbit data saved to deorbit_prediction.csv")
+                return
+        
+        # Calculate velocities and accelerations for trend analysis
         velocities = []
         accelerations = []
         
@@ -293,23 +323,23 @@ class Simulation:
             coeffs_alt = np.polyfit(time_hours, altitudes, 3)
             poly_alt = np.poly1d(coeffs_alt)
             
-            # Find when altitude reaches 150 km (ionosphere boundary)
+            # Find when altitude reaches deorbit boundary
             def altitude_func(t):
-                return poly_alt(t) - 150
+                return poly_alt(t) - TERMINATION_ALTITUDE/1000  # deorbit boundary
             
-            # Use Newton's method to find root (when altitude = 150 km)
+            # Use Newton's method to find root (when altitude = 50 km)
             from scipy.optimize import fsolve
             deorbit_time_hours = fsolve(altitude_func, time_hours[-1] + 10)[0]
             
-            # Ensure prediction is reasonable (not negative or too far in future)
-            if deorbit_time_hours > time_hours[-1] and deorbit_time_hours < 1000:  # reasonable range
+            # Check if prediction is reasonable
+            if deorbit_time_hours > time_hours[-1] and deorbit_time_hours < 10000:  # reasonable range
                 print(f"Polynomial regression prediction:")
                 print(f"  Altitude trend: {coeffs_alt[0]:.5f}t³ + {coeffs_alt[1]:.5f}t² + {coeffs_alt[2]:.5f}t + {coeffs_alt[3]:.5f}")
-                print(f"  Predicted deorbit time: {deorbit_time_hours:.5f} hours ({deorbit_time_hours/24:.2f} days)")
-                print(f"  Time to deorbit: {deorbit_time_hours - time_hours[-1]:.5f} hours")
+                print(f"  Predicted deorbit time: {deorbit_time_hours:.2f} hours ({deorbit_time_hours/24:.2f} days)")
+                print(f"  Time to deorbit: {deorbit_time_hours - time_hours[-1]:.2f} hours")
                 
                 # Calculate deorbit rate
-                deorbit_rate = (altitudes[0] - 150) / deorbit_time_hours  # km/hour
+                deorbit_rate = (altitudes[0] - TERMINATION_ALTITUDE/1000) / deorbit_time_hours  # km/hour
                 print(f"  Average deorbit rate: {deorbit_rate:.5f} km/hour")
                 
                 # Save prediction to CSV
@@ -320,6 +350,8 @@ class Simulation:
                         'Time to Deorbit (hours)',
                         'Time to Deorbit (days)',
                         'Average Deorbit Rate (km/hour)',
+                        'Deorbit Boundary (km)',
+                        'Current Altitude (km)',
                         'Polynomial Coefficients (a*t³ + b*t² + c*t + d)',
                         'Coefficient a',
                         'Coefficient b', 
@@ -327,11 +359,13 @@ class Simulation:
                         'Coefficient d'
                     ],
                     'Value': [
-                        f"{time_hours[-1]:.5f}",
-                        f"{deorbit_time_hours:.5f}",
-                        f"{deorbit_time_hours - time_hours[-1]:.5f}",
-                        f"{(deorbit_time_hours - time_hours[-1])/24:.5f}",
+                        f"{time_hours[-1]:.2f}",
+                        f"{deorbit_time_hours:.2f}",
+                        f"{deorbit_time_hours - time_hours[-1]:.2f}",
+                        f"{(deorbit_time_hours - time_hours[-1])/24:.2f}",
                         f"{deorbit_rate:.5f}",
+                        f"{TERMINATION_ALTITUDE/1000:.1f}",
+                        f"{current_altitude:.2f}",
                         f"Altitude = a*t³ + b*t² + c*t + d",
                         f"{coeffs_alt[0]:.5f}",
                         f"{coeffs_alt[1]:.5f}",
@@ -347,13 +381,16 @@ class Simulation:
             else:
                 print(f"Polynomial regression prediction: No reasonable deorbit time found")
                 print(f"  Altitude trend: {coeffs_alt[0]:.5f}t³ + {coeffs_alt[1]:.5f}t² + {coeffs_alt[2]:.5f}t + {coeffs_alt[3]:.5f}")
-                print(f"  Current altitude: {altitudes[-1]:.5f} km")
+                print(f"  Current altitude: {current_altitude:.2f} km")
                 print(f"  Altitude change rate: {coeffs_alt[2]:.5f} km/hour")
+                print(f"  Deorbit boundary: {TERMINATION_ALTITUDE/1000:.1f} km")
+                print(f"  Note: Satellite may not deorbit within reasonable timeframe")
                 
         except Exception as e:
             print(f"Error in polynomial regression: {e}")
-            print(f"Current altitude: {altitudes[-1]:.5f} km")
-            print(f"Altitude change over simulation: {altitudes[0] - altitudes[-1]:.5f} km")
+            print(f"Current altitude: {current_altitude:.2f} km")
+            print(f"Altitude change over simulation: {altitudes[0] - altitudes[-1]:.2f} km")
+            print(f"Deorbit boundary: {TERMINATION_ALTITUDE/1000:.1f} km")
 
 def main():
     """Main function to run the complete simulation."""
@@ -361,8 +398,8 @@ def main():
     sim = Simulation()
     
     # Run simulation for 1 week with 3000 discrete time steps
-    t_span = (0, 90*60)  # 1 week in seconds (168 hours)
-    num_steps = 30  # Exactly 3000 time steps
+    t_span = (0, 3600*24)
+    num_steps = int(t_span[1] / 180) 
     
     # Run simulation
     sim.run_simulation(t_span, num_steps)
@@ -373,7 +410,7 @@ def main():
     # Generate summary
     sim.generate_summary()
     
-    print("\nSimulation complete! Check the generated plots and summary CSV file.")
+    print("\nSimulation complete")
 
 if __name__ == "__main__":
     main()

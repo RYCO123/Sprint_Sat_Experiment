@@ -5,3 +5,4 @@ requests>=2.25.0
 tqdm>=4.62.0
 scipy
 astropy
+PyIRI>=0.0.3
