@@ -35,106 +35,61 @@ def generate_summary(time_data, mhd_states, solar_states, mhd_power, solar_power
         print("No simulation data available.")
         return
     
-    # Calculate final metrics
-    final_time = time_data[-1]
-    mission_duration_hours = final_time / 3600
-    
-    # Final altitudes
-    final_mhd_state = mhd_states[-1]
-    final_solar_state = solar_states[-1]
-    final_mhd_alt = np.linalg.norm(final_mhd_state[:3]) - R_EARTH
-    final_solar_alt = np.linalg.norm(final_solar_state[:3]) - R_EARTH
-    
-    # Average powers
-    avg_mhd_power = np.mean(mhd_power)
-    avg_solar_power = np.mean(solar_power)
-    
-    # Total energies
-    total_mhd_energy = mhd_energy[-1] / 3600  # Convert to Wh
-    total_solar_energy = solar_energy[-1] / 3600  # Convert to Wh
-    
     # Ensure results directory exists
     results_dir = 'results'
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
 
-    # Add satellite parameters section
-    param_data = {
-        'Parameter': [
-            'MHD: Mass (kg)',
-            'MHD: Electrode Distance (m)',
-            'MHD: Generator Length (m)',
-            'MHD: Magnetic Distance (m)',
-            'MHD: Magnet Strength (T)',
-            'MHD: Conductor Resistivity (Ohm*m)',
-            'MHD: Conductor Diameter (m)',
-            'MHD: Circuit Resistance (Ohm)',
-            'MHD: Plasma Temperature (K)',
-            'Solar: Mass (kg)',
-            'Solar: Peak Power (W)',
-            'Solar: Efficiency',
-            'Orbit: Initial Altitude (m)',
-            'Orbit: Inclination (deg)',
-            'Orbit: Deorbit Altitude (m)'
-        ],
-        'Value': [
-            f'{MASS_1U}',
-            f'{ELECTRODE_DISTANCE}',
-            f'{GENERATOR_LENGTH}',
-            f'{MAGNETIC_DISTANCE}',
-            f'{MHD_MAGNET_STRENGTH}',
-            f'{MHD_CONDUCTOR_RESISTIVITY}',
-            f'{MHD_CONDUCTOR_DIAMETER}',
-            f'{MHD_CIRCUIT_RESISTANCE}',
-            f'{PLASMA_TEMPERATURE}',
-            f'{MASS_1U}',
-            f'{SOLAR_POWER_PEAK}',
-            f'{SOLAR_EFFICIENCY}',
-            f'{INITIAL_ALTITUDE}',
-            f'{INCLINATION_DEG}',
-            f'{TERMINATION_ALTITUDE}'
-        ]
-    }
-    param_df = pd.DataFrame(param_data)
+    # Calculate final metrics
+    final_time = time_data[-1]
+    mission_duration_hours = final_time / 3600
+    final_mhd_state = mhd_states[-1]
+    final_solar_state = solar_states[-1]
+    final_mhd_alt = np.linalg.norm(final_mhd_state[:3]) - R_EARTH
+    final_solar_alt = np.linalg.norm(final_solar_state[:3]) - R_EARTH
+    avg_mhd_power = np.mean(mhd_power)
+    avg_solar_power = np.mean(solar_power)
+    total_mhd_energy = mhd_energy[-1] / 3600  # Wh
+    total_solar_energy = solar_energy[-1] / 3600  # Wh
 
-    # Create summary dataframe
-    summary_data = {
-        'Metric': [
-            'Mission Duration (hours)',
-            'Initial Altitude (km)',
-            'Final Altitude (km)',
-            'Average Power Generated (W)',
-            'Total Energy Generated (Wh)',
-            'Power Ratio (MHD/Solar)',
-            'Energy Ratio (MHD/Solar)'
-        ],
-        'MHD Sprint Satellite': [
-            f"{mission_duration_hours:.5f}",
-            f"{INITIAL_ALTITUDE/1000:.5f}",
-            f"{final_mhd_alt/1000:.5f}",
-            f"{avg_mhd_power:.5f}",
-            f"{total_mhd_energy:.5f}",
-            f"{avg_mhd_power/avg_solar_power:.5f}x",
-            f"{total_mhd_energy/total_solar_energy:.5f}x"
-        ],
-        'Standard Solar Satellite': [
-            f"{mission_duration_hours:.5f}",
-            f"{INITIAL_ALTITUDE/1000:.5f}",
-            f"{final_solar_alt/1000:.5f}",
-            f"{avg_solar_power:.5f}",
-            f"{total_solar_energy:.5f}",
-            "1.00000x",
-            "1.00000x"
-        ]
-    }
-    
-    summary_df = pd.DataFrame(summary_data)
+    # Section 1: General Experiment Results
+    results_rows = [
+        ["General Experiment Results", "", ""],
+        ["Mission Duration (hours)", f"{mission_duration_hours:.5f}", f"{mission_duration_hours:.5f}"],
+        ["Initial Altitude (km)", f"{INITIAL_ALTITUDE/1000:.5f}", f"{INITIAL_ALTITUDE/1000:.5f}"],
+        ["Final Altitude (km)", f"{final_mhd_alt/1000:.5f}", f"{final_solar_alt/1000:.5f}"],
+        ["Average Power Generated (W)", f"{avg_mhd_power:.5f}", f"{avg_solar_power:.5f}"],
+        ["Total Energy Generated (Wh)", f"{total_mhd_energy:.5f}", f"{total_solar_energy:.5f}"],
+        ["Power Ratio (MHD/Solar)", f"{avg_mhd_power/avg_solar_power:.5f}x", "1.00000x"],
+        ["Energy Ratio (MHD/Solar)", f"{total_mhd_energy/total_solar_energy:.5f}x", "1.00000x"],
+        ["", "", ""]
+    ]
 
-    # Concatenate parameter and summary tables
-    full_df = pd.concat([param_df, pd.DataFrame([['', '', '']]), summary_df], axis=0, ignore_index=True)
+    # Section 2: Configuration Parameters
+    config_rows = [
+        ["Configuration Parameters", "", ""],
+        ["Mass (kg)", f"{MASS_1U}", f"{MASS_1U}"],
+        ["Electrode Distance (m)", f"{ELECTRODE_DISTANCE}", "-"],
+        ["Generator Length (m)", f"{GENERATOR_LENGTH}", "-"],
+        ["Magnetic Distance (m)", f"{MAGNETIC_DISTANCE}", "-"],
+        ["Magnet Strength (T)", f"{MHD_MAGNET_STRENGTH}", "-"],
+        ["Conductor Resistivity (Ohm*m)", f"{MHD_CONDUCTOR_RESISTIVITY}", "-"],
+        ["Conductor Diameter (m)", f"{MHD_CONDUCTOR_DIAMETER}", "-"],
+        ["Circuit Resistance (Ohm)", f"{MHD_CIRCUIT_RESISTANCE}", "-"],
+        ["Plasma Temperature (K)", f"{PLASMA_TEMPERATURE}", "-"],
+        ["Peak Power (W)", "-", f"{SOLAR_POWER_PEAK}"],
+        ["Efficiency", "-", f"{SOLAR_EFFICIENCY}"],
+        ["Initial Altitude (m)", f"{INITIAL_ALTITUDE}", f"{INITIAL_ALTITUDE}"],
+        ["Inclination (deg)", f"{INCLINATION_DEG}", f"{INCLINATION_DEG}"],
+        ["Deorbit Altitude (m)", f"{TERMINATION_ALTITUDE}", f"{TERMINATION_ALTITUDE}"],
+    ]
+
+    # Combine all rows
+    all_rows = results_rows + config_rows
+    summary_df = pd.DataFrame(all_rows, columns=["Metric", "MHD Sprint Satellite", "Standard Solar Satellite"])
     summary_path = os.path.join(results_dir, 'simulation_summary.csv')
-    full_df.to_csv(summary_path, index=False, header=True)
-    print(full_df.to_string(index=False))
+    summary_df.to_csv(summary_path, index=False)
+    print(summary_df.to_string(index=False))
     print(f"\nSummary saved to {summary_path}")
     
     # Print key insights
@@ -162,29 +117,25 @@ def predict_deorbit_time(time_data, mhd_states):
     time_hours = np.array(time_data) / 3600
     altitudes = np.array([np.linalg.norm(state[:3]) - R_EARTH for state in mhd_states]) / 1000  # km
     
-    # Check if satellite has already deorbited during simulation
     min_altitude = np.min(altitudes)
     current_altitude = altitudes[-1]
-    
     print(f"Current MHD satellite altitude: {current_altitude:.2f} km")
     print(f"Minimum altitude reached: {min_altitude:.2f} km")
     print(f"Deorbit boundary: {TERMINATION_ALTITUDE/1000:.1f} km")
-    
-    # If satellite has already gone below deorbit boundary, it has deorbited
+
+    results_dir = 'results'
+    if not os.path.exists(results_dir):
+        os.makedirs(results_dir)
+    prediction_path = os.path.join(results_dir, 'deorbit_prediction.csv')
+
+    # If satellite has already gone below deorbit boundary, report when
     if min_altitude <= TERMINATION_ALTITUDE/1000:
-        # Find when it first crossed the deorbit boundary
         deorbit_index = np.where(altitudes <= TERMINATION_ALTITUDE/1000)[0]
         if len(deorbit_index) > 0:
             first_deorbit_time = time_hours[deorbit_index[0]]
             print(f"MHD satellite has already deorbited!")
             print(f"Deorbit occurred at: {first_deorbit_time:.2f} hours ({first_deorbit_time/24:.2f} days)")
             print(f"Altitude at deorbit: {altitudes[deorbit_index[0]]:.2f} km")
-            
-            # Save deorbit data
-            results_dir = 'results'
-            if not os.path.exists(results_dir):
-                os.makedirs(results_dir)
-            deorbit_path = os.path.join(results_dir, 'deorbit_prediction.csv')
             deorbit_data = {
                 'Metric': [
                     'Deorbit Status',
@@ -204,109 +155,66 @@ def predict_deorbit_time(time_data, mhd_states):
                 ]
             }
             deorbit_df = pd.DataFrame(deorbit_data)
-            deorbit_df.to_csv(deorbit_path, index=False)
-            print(f"Deorbit data saved to {deorbit_path}")
+            deorbit_df.to_csv(prediction_path, index=False)
+            print(f"Deorbit data saved to {prediction_path}")
             return
-    
-    # Calculate velocities and accelerations for trend analysis
-    velocities = []
-    accelerations = []
-    
-    for i in range(len(mhd_states)):
-        # Velocity magnitude
-        v_mag = np.linalg.norm(mhd_states[i][3:]) / 1000  # km/s
-        velocities.append(v_mag)
-        
-        # Acceleration (change in velocity between steps)
-        if i > 0:
-            dt = (time_data[i] - time_data[i-1]) / 3600  # hours
-            dv = (velocities[i] - velocities[i-1])  # km/s
-            acc = dv / dt if dt > 0 else 0  # km/s²
-            accelerations.append(acc)
-        else:
-            accelerations.append(0)
-    
-    # Fit polynomial to altitude data (3rd degree)
-    try:
-        coeffs_alt = np.polyfit(time_hours, altitudes, 3)
-        poly_alt = np.poly1d(coeffs_alt)
-        
-        # Find when altitude reaches deorbit boundary
-        def altitude_func(t):
-            return poly_alt(t) - TERMINATION_ALTITUDE/1000  # deorbit boundary
-        
-        from scipy.optimize import fsolve
-        guess = max(time_hours[-1] + 10, 1.0)
-        roots = fsolve(altitude_func, [guess, guess+100, guess+1000, guess+10000])
-        # Only consider real, positive roots in the future
-        future_roots = [r for r in roots if np.isreal(r) and r > time_hours[-1]]
-        results_dir = 'results'
-        if not os.path.exists(results_dir):
-            os.makedirs(results_dir)
-        prediction_path = os.path.join(results_dir, 'deorbit_prediction.csv')
-        if future_roots:
-            deorbit_time_hours = float(np.min(future_roots))
-            print(f"Cubic regression prediction:")
-            print(f"  Altitude trend: {coeffs_alt[0]:.5f}t³ + {coeffs_alt[1]:.5f}t² + {coeffs_alt[2]:.5f}t + {coeffs_alt[3]:.5f}")
-            print(f"  Predicted deorbit time: {deorbit_time_hours:.2f} hours ({deorbit_time_hours/24:.2f} days)")
-            print(f"  Time to deorbit: {deorbit_time_hours - time_hours[-1]:.2f} hours")
-            deorbit_rate = (altitudes[0] - TERMINATION_ALTITUDE/1000) / deorbit_time_hours  # km/hour
-            print(f"  Average deorbit rate: {deorbit_rate:.5f} km/hour")
-            prediction_data = {
-                'Metric': [
-                    'Current Simulation Time (hours)',
-                    'Predicted Deorbit Time (hours)',
-                    'Time to Deorbit (hours)',
-                    'Time to Deorbit (days)',
-                    'Average Deorbit Rate (km/hour)',
-                    'Deorbit Boundary (km)',
-                    'Current Altitude (km)',
-                    'Polynomial Coefficients (a*t³ + b*t² + c*t + d)',
-                    'Coefficient a',
-                    'Coefficient b', 
-                    'Coefficient c',
-                    'Coefficient d'
-                ],
-                'Value': [
-                    f"{time_hours[-1]:.2f}",
-                    f"{deorbit_time_hours:.2f}",
-                    f"{deorbit_time_hours - time_hours[-1]:.2f}",
-                    f"{(deorbit_time_hours - time_hours[-1])/24:.2f}",
-                    f"{deorbit_rate:.5f}",
-                    f"{TERMINATION_ALTITUDE/1000:.1f}",
-                    f"{current_altitude:.2f}",
-                    f"Altitude = a*t³ + b*t² + c*t + d",
-                    f"{coeffs_alt[0]:.5f}",
-                    f"{coeffs_alt[1]:.5f}",
-                    f"{coeffs_alt[2]:.5f}",
-                    f"{coeffs_alt[3]:.5f}"
-                ]
-            }
-            prediction_df = pd.DataFrame(prediction_data)
-            prediction_df.to_csv(prediction_path, index=False)
-            print(f"  Deorbit prediction saved to {prediction_path}")
-        else:
-            print("Not enough data to find deorbit time.")
-            prediction_data = {
-                'Metric': ['Deorbit Prediction'],
-                'Value': ['Not enough data to find deorbit time']
-            }
-            prediction_df = pd.DataFrame(prediction_data)
-            prediction_df.to_csv(prediction_path, index=False)
-            print(f"  Deorbit prediction saved to {prediction_path}")
-    except Exception as e:
-        print(f"Error in polynomial regression: {e}")
-        print(f"Current altitude: {current_altitude:.2f} km")
-        print(f"Altitude change over simulation: {altitudes[0] - altitudes[-1]:.2f} km")
-        print(f"Deorbit boundary: {TERMINATION_ALTITUDE/1000:.1f} km")
-        # Always output a CSV, even on error
-        results_dir = 'results'
-        if not os.path.exists(results_dir):
-            os.makedirs(results_dir)
-        prediction_path = os.path.join(results_dir, 'deorbit_prediction.csv')
+
+    # Otherwise, fit a cubic polynomial and find when it will cross the boundary
+    coeffs_alt = np.polyfit(time_hours, altitudes, 3)
+    poly_alt = np.poly1d(coeffs_alt)
+    def altitude_func(t):
+        return poly_alt(t) - TERMINATION_ALTITUDE/1000
+
+    from scipy.optimize import fsolve
+    guess = max(time_hours[-1] + 10, 1.0)
+    roots = fsolve(altitude_func, [guess, guess+100, guess+1000, guess+10000])
+    future_roots = [r for r in roots if np.isreal(r) and r > time_hours[-1]]
+    if future_roots:
+        deorbit_time_hours = float(np.min(future_roots))
+        print(f"Cubic regression prediction:")
+        print(f"  Altitude trend: {coeffs_alt[0]:.5f}t³ + {coeffs_alt[1]:.5f}t² + {coeffs_alt[2]:.5f}t + {coeffs_alt[3]:.5f}")
+        print(f"  Predicted deorbit time: {deorbit_time_hours:.2f} hours ({deorbit_time_hours/24:.2f} days)")
+        print(f"  Time to deorbit: {deorbit_time_hours - time_hours[-1]:.2f} hours")
+        deorbit_rate = (altitudes[0] - TERMINATION_ALTITUDE/1000) / deorbit_time_hours  # km/hour
+        print(f"  Average deorbit rate: {deorbit_rate:.5f} km/hour")
+        prediction_data = {
+            'Metric': [
+                'Current Simulation Time (hours)',
+                'Predicted Deorbit Time (hours)',
+                'Time to Deorbit (hours)',
+                'Time to Deorbit (days)',
+                'Average Deorbit Rate (km/hour)',
+                'Deorbit Boundary (km)',
+                'Current Altitude (km)',
+                'Polynomial Coefficients (a*t³ + b*t² + c*t + d)',
+                'Coefficient a',
+                'Coefficient b', 
+                'Coefficient c',
+                'Coefficient d'
+            ],
+            'Value': [
+                f"{time_hours[-1]:.2f}",
+                f"{deorbit_time_hours:.2f}",
+                f"{deorbit_time_hours - time_hours[-1]:.2f}",
+                f"{(deorbit_time_hours - time_hours[-1])/24:.2f}",
+                f"{deorbit_rate:.5f}",
+                f"{TERMINATION_ALTITUDE/1000:.1f}",
+                f"{current_altitude:.2f}",
+                f"Altitude = a*t³ + b*t² + c*t + d",
+                f"{coeffs_alt[0]:.5f}",
+                f"{coeffs_alt[1]:.5f}",
+                f"{coeffs_alt[2]:.5f}",
+                f"{coeffs_alt[3]:.5f}"
+            ]
+        }
+        prediction_df = pd.DataFrame(prediction_data)
+        prediction_df.to_csv(prediction_path, index=False)
+        print(f"  Deorbit prediction saved to {prediction_path}")
+    else:
+        print("Not enough data to find deorbit time.")
         prediction_data = {
             'Metric': ['Deorbit Prediction'],
-            'Value': [f'Error: {e}']
+            'Value': ['Not enough data to find deorbit time']
         }
         prediction_df = pd.DataFrame(prediction_data)
         prediction_df.to_csv(prediction_path, index=False)

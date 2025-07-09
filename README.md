@@ -18,7 +18,7 @@ This project simulates two satellites in Low Earth Orbit (LEO):
 
 ## Project Structure
 
-The codebase is now organized for clarity and maintainability:
+The codebase is organized for clarity and maintainability:
 
 ```
 main.py                # Entry point: runs the full simulation, analysis, and plotting
@@ -32,7 +32,6 @@ simulation.py          # Core simulation orchestration logic
 requirements.txt       # Python dependencies
 README.md              # This documentation
 LICENSE, CHANGELOG.md, CONTRIBUTING.md, .gitignore, etc.
-plots/                 # Output plots
 ```
 
 ---
@@ -53,7 +52,8 @@ The generator is a **compact rectangular design** optimized for the 1U form fact
 * **Electrode Distance**: 0.1 m (10 cm) - distance between perpendicular electrodes
 * **Generator Length**: 0.1 m (10 cm) - longitudinal distance of the generator
 * **Magnetic Distance**: 0.05 m (5 cm) - distance between magnets creating B field
-* **Magnetic Field**: 0.01 Tesla (10,000 μT) - enhanced field strength from permanent magnets
+* **Magnetic Field**: variable and demonstrated up to 0.01T (10,000 μT) - created with permanent or electromagnets
+    * Using electromagnets allows the B field to be varied in orbit, providing active control over power generation and orbital altitude (drag) during the mission.
 * **Electrodes**: Conductive electrodes for current collection
 * **Orientation**: Electrodes automatically align perpendicular to velocity and magnetic field
 
@@ -137,44 +137,86 @@ F_drag = I × (L × B)
 
 ## Usage
 
-1. **Install dependencies**  
+1. **Clone the repository**
+   ```
+   git clone https://github.com/RYCO123/Sprint_Sat_Experiment.git
+   cd Sprint_Sat_Experiment
+   ```
+
+2. **Install dependencies**  
    (Recommended: use a virtual environment)
    ```
    pip install -r requirements.txt
    ```
 
-2. **Run the simulation**
+3. **Run the simulation**
    ```
    python main.py
    ```
 
 This will:
-
 - Simulate both satellites for the specified duration
-- Generate comparison plots in the `plots/` directory
-- Create a summary CSV file with key metrics
+- Generate comparison plots and summary CSV files for each run
 - Predict deorbit time for the MHD satellite
 
 ---
 
-## Output Files
+## Experimental Runs and Results
 
-- `simulation_summary.csv`: Key metrics comparison
-- `deorbit_prediction.csv`: MHD satellite deorbit analysis
-- `plots/orbital_trajectories_2d.png`: 2D orbital comparison
-- `plots/orbital_trajectories_3d.png`: 3D orbital comparison
-- `plots/comprehensive_comparison.png`: Power and energy analysis
+Below are the results for each run, with plots and summary statistics. The number in each run (e.g., 0.4x, 1.4x, etc.) indicates the ratio of MHD to solar power generation.
+
+### 0.4x Power Run
+
+![Comprehensive Comparison Plot](plots_0-4x/comprehensive_comparison.png)
+
+- **Average Power Generated (W):** MHD: 0.01908, Solar: 0.04630
+- **Total Energy Generated (Wh):** MHD: 0.45791, Solar: 1.11345
+- **Power Ratio (MHD/Solar):** 0.41x
+- **Energy Ratio (MHD/Solar):** 0.41x
+- **Deorbit prediction:** ~67.8 days to deorbit from 400 km (average deorbit rate: 0.21 km/hour)
+- **Power output was more stable over time compared to the solar satellite, despite lower magnitude.**
+
+### 1.4x Power Run
+
+![Comprehensive Comparison Plot](plots_1-4x/comprehensive_comparison.png)
+
+- **Average Power Generated (W):** MHD: 0.06585, Solar: 0.04630
+- **Total Energy Generated (Wh):** MHD: 1.58056, Solar: 1.11345
+- **Power Ratio (MHD/Solar):** 1.42x
+- **Energy Ratio (MHD/Solar):** 1.42x
+- **Deorbit prediction:** ~44 days to deorbit from 400 km (average deorbit rate: 0.32 km/hour)
+- **Power output remained more stable than solar, with less dependence on sun position.**
+
+### 6.8x Power Run
+
+![Comprehensive Comparison Plot](plots_6-8x/comprehensive_comparison.png)
+
+- **Average Power Generated (W):** MHD: 0.31513, Solar: 0.04630
+- **Total Energy Generated (Wh):** MHD: 7.56400, Solar: 1.11345
+- **Power Ratio (MHD/Solar):** 6.81x
+- **Energy Ratio (MHD/Solar):** 6.79x
+- **Deorbit prediction:** ~23 days to deorbit from 400 km (average deorbit rate: 0.59 km/hour)
+- **Power output was consistently stable, with rapid altitude loss due to drag.**
+
+### 27.4x Power Run
+
+![Comprehensive Comparison Plot](plots_27-4x/comprehensive_comparison.png)
+
+- **Average Power Generated (W):** MHD: 1.26837, Solar: 0.04630
+- **Total Energy Generated (Wh):** MHD: 30.44481, Solar: 1.11345
+- **Power Ratio (MHD/Solar):** 27.40x
+- **Energy Ratio (MHD/Solar):** 27.34x
+- **Deorbit prediction:** ~10.4 days to deorbit from 400 km (average deorbit rate: 1.25 km/hour)
+- **Power output was highly stable, but the satellite deorbited extremely quickly.**
 
 ---
 
 ## Key Results
 
-The simulation demonstrates:
-
-- **Power Generation**: MHD satellite generates significantly more power than solar (typically 22–27x, depending on parameters)
-- **Orbital Decay**: MHD drag causes faster altitude loss compared to solar satellite
-- **Energy Efficiency**: Higher total energy generation despite shorter mission duration
-- **Controlled Deorbiting**: Predictable orbital decay for end-of-life management
+- **Power Generation:** The MHD Sprint Satellite can generate significantly more power than a standard solar satellite, depending on configuration. Even at lower power, its output is much more stable over time, as it is not solely dependent on direct sunlight. Instead, it relies on ionospheric plasma flow, which is less affected by orbital position relative to the sun (though still influenced by ionospheric conditions).
+- **Orbital Decay:** The increased power comes at the cost of much greater drag, causing the MHD satellite to deorbit far faster than a solar satellite. The higher the power output, the faster the deorbit.
+- **Stability:** Power generation for the MHD satellite is far more stable than for a solar satellite, which is subject to eclipses and sun angle. This makes the MHD approach attractive for missions requiring consistent power delivery, at the expense of mission duration.
+- **Tradeoff:** There is a clear tradeoff between power generation and orbital lifetime. The MHD satellite can be tuned for more power or longer life, but not both.
 
 ---
 

@@ -129,8 +129,9 @@ dmypy.json
 .pyre/
 
 # Project-specific files
-*.png
-*.csv
+# Ignore only top-level plots/ and results/ folders, but allow plots_*/ and results_*/
+plots/
+results/
 *.log
 simulation_summary_*.csv
 *_api.png
@@ -198,3 +199,6 @@ coverage.xml
 
 plots/
 results/
+**/plots*/ 
+**/results*/ 
+
