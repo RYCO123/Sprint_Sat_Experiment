@@ -38,7 +38,7 @@ LICENSE, CHANGELOG.md, CONTRIBUTING.md, .gitignore, etc.
 
 ## 1U CubeSat MHD Generator Design
 
-The MHD Sprint Satellite is designed as a **1U CubeSat (10×10×10 cm)** with the internal volume divided equally:
+The MHD Sprint Satellite is designed as a **1U CubeSat (10×10×11.35 cm)** with the internal volume divided equally:
 
 ### Internal Layout
 
