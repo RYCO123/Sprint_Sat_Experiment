@@ -1,0 +1,13 @@
+Metric,Value
+Current Simulation Time (hours),24.00
+Predicted Deorbit Time (hours),1650.39
+Time to Deorbit (hours),1626.39
+Time to Deorbit (days),67.77
+Average Deorbit Rate (km/hour),0.20595
+Deorbit Boundary (km),60.1
+Current Altitude (km),399.71
+Polynomial Coefficients (a*t³ + b*t² + c*t + d),Altitude = a*t³ + b*t² + c*t + d
+Coefficient a,-0.00000
+Coefficient b,0.00001
+Coefficient c,-0.01191
+Coefficient d,400.00034

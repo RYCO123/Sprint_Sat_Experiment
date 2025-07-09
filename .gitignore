@@ -199,6 +199,5 @@ coverage.xml
 
 plots/
 results/
-**/plots*/ 
-**/results*/ 
+
 

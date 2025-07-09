@@ -1,0 +1,25 @@
+Metric,MHD Sprint Satellite,Standard Solar Satellite
+General Experiment Results,,
+Mission Duration (hours),24.00000,24.00000
+Initial Altitude (km),400.00000,400.00000
+Final Altitude (km),399.71476,400.00149
+Average Power Generated (W),0.01908,0.04630
+Total Energy Generated (Wh),0.45791,1.11345
+Power Ratio (MHD/Solar),0.41206x,1.00000x
+Energy Ratio (MHD/Solar),0.41125x,1.00000x
+,,
+Configuration Parameters,,
+Mass (kg),1.33,1.33
+Electrode Distance (m),0.1,-
+Generator Length (m),0.1,-
+Magnetic Distance (m),0.05,-
+Magnet Strength (T),0.00125,-
+Conductor Resistivity (Ohm*m),1.68e-08,-
+Conductor Diameter (m),0.001,-
+Circuit Resistance (Ohm),5.0,-
+Plasma Temperature (K),1000,-
+Peak Power (W),-,10.0
+Efficiency,-,0.25
+Initial Altitude (m),400000.0,400000.0
+Inclination (deg),20.0,20.0
+Deorbit Altitude (m),60100.0,60100.0
