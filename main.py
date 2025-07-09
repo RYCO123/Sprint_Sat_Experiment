@@ -12,8 +12,8 @@ def main():
     """Main function to run the complete simulation."""
     # Create and run simulation
     sim = Simulation()
-    t_span = (0, 3600*24)  # 24 hours
-    num_steps = int(t_span[1] / 180)  # 480 time steps
+    t_span = (0, 3600*4) 
+    num_steps = int(t_span[1] / 180) 
     
     # Run the simulation
     sim.run_simulation(t_span, num_steps)

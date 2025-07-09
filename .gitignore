@@ -197,4 +197,4 @@ coverage.xml
 *.zip
 
 plots/
-
+results/

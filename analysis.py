@@ -8,7 +8,12 @@ generating summaries, and predicting deorbit times.
 import numpy as np
 import pandas as pd
 from scipy.optimize import fsolve
-from config import R_EARTH, TERMINATION_ALTITUDE, INITIAL_ALTITUDE
+from config import (
+    MASS_1U, SOLAR_POWER_PEAK, SOLAR_EFFICIENCY, ELECTRODE_DISTANCE, GENERATOR_LENGTH, MAGNETIC_DISTANCE,
+    MHD_MAGNET_STRENGTH, MHD_CONDUCTOR_RESISTIVITY, MHD_CONDUCTOR_DIAMETER, MHD_CIRCUIT_RESISTANCE,
+    INITIAL_ALTITUDE, INCLINATION_DEG, TERMINATION_ALTITUDE, PLASMA_TEMPERATURE, R_EARTH
+)
+import os
 
 
 def generate_summary(time_data, mhd_states, solar_states, mhd_power, solar_power, mhd_energy, solar_energy):
@@ -48,6 +53,50 @@ def generate_summary(time_data, mhd_states, solar_states, mhd_power, solar_power
     total_mhd_energy = mhd_energy[-1] / 3600  # Convert to Wh
     total_solar_energy = solar_energy[-1] / 3600  # Convert to Wh
     
+    # Ensure results directory exists
+    results_dir = 'results'
+    if not os.path.exists(results_dir):
+        os.makedirs(results_dir)
+
+    # Add satellite parameters section
+    param_data = {
+        'Parameter': [
+            'MHD: Mass (kg)',
+            'MHD: Electrode Distance (m)',
+            'MHD: Generator Length (m)',
+            'MHD: Magnetic Distance (m)',
+            'MHD: Magnet Strength (T)',
+            'MHD: Conductor Resistivity (Ohm*m)',
+            'MHD: Conductor Diameter (m)',
+            'MHD: Circuit Resistance (Ohm)',
+            'MHD: Plasma Temperature (K)',
+            'Solar: Mass (kg)',
+            'Solar: Peak Power (W)',
+            'Solar: Efficiency',
+            'Orbit: Initial Altitude (m)',
+            'Orbit: Inclination (deg)',
+            'Orbit: Deorbit Altitude (m)'
+        ],
+        'Value': [
+            f'{MASS_1U}',
+            f'{ELECTRODE_DISTANCE}',
+            f'{GENERATOR_LENGTH}',
+            f'{MAGNETIC_DISTANCE}',
+            f'{MHD_MAGNET_STRENGTH}',
+            f'{MHD_CONDUCTOR_RESISTIVITY}',
+            f'{MHD_CONDUCTOR_DIAMETER}',
+            f'{MHD_CIRCUIT_RESISTANCE}',
+            f'{PLASMA_TEMPERATURE}',
+            f'{MASS_1U}',
+            f'{SOLAR_POWER_PEAK}',
+            f'{SOLAR_EFFICIENCY}',
+            f'{INITIAL_ALTITUDE}',
+            f'{INCLINATION_DEG}',
+            f'{TERMINATION_ALTITUDE}'
+        ]
+    }
+    param_df = pd.DataFrame(param_data)
+
     # Create summary dataframe
     summary_data = {
         'Metric': [
@@ -80,9 +129,13 @@ def generate_summary(time_data, mhd_states, solar_states, mhd_power, solar_power
     }
     
     summary_df = pd.DataFrame(summary_data)
-    summary_df.to_csv('simulation_summary.csv', index=False)
-    print(summary_df.to_string(index=False))
-    print("\nSummary saved to simulation_summary.csv")
+
+    # Concatenate parameter and summary tables
+    full_df = pd.concat([param_df, pd.DataFrame([['', '', '']]), summary_df], axis=0, ignore_index=True)
+    summary_path = os.path.join(results_dir, 'simulation_summary.csv')
+    full_df.to_csv(summary_path, index=False, header=True)
+    print(full_df.to_string(index=False))
+    print(f"\nSummary saved to {summary_path}")
     
     # Print key insights
     print(f"\n--- Key Insights ---")
@@ -128,6 +181,10 @@ def predict_deorbit_time(time_data, mhd_states):
             print(f"Altitude at deorbit: {altitudes[deorbit_index[0]]:.2f} km")
             
             # Save deorbit data
+            results_dir = 'results'
+            if not os.path.exists(results_dir):
+                os.makedirs(results_dir)
+            deorbit_path = os.path.join(results_dir, 'deorbit_prediction.csv')
             deorbit_data = {
                 'Metric': [
                     'Deorbit Status',
@@ -146,10 +203,9 @@ def predict_deorbit_time(time_data, mhd_states):
                     f"{time_hours[-1]:.2f}"
                 ]
             }
-            
             deorbit_df = pd.DataFrame(deorbit_data)
-            deorbit_df.to_csv('deorbit_prediction.csv', index=False)
-            print(f"Deorbit data saved to deorbit_prediction.csv")
+            deorbit_df.to_csv(deorbit_path, index=False)
+            print(f"Deorbit data saved to {deorbit_path}")
             return
     
     # Calculate velocities and accelerations for trend analysis
@@ -179,21 +235,23 @@ def predict_deorbit_time(time_data, mhd_states):
         def altitude_func(t):
             return poly_alt(t) - TERMINATION_ALTITUDE/1000  # deorbit boundary
         
-        # Use Newton's method to find root (when altitude = 50 km)
-        deorbit_time_hours = fsolve(altitude_func, time_hours[-1] + 10)[0]
-        
-        # Check if prediction is reasonable
-        if deorbit_time_hours > time_hours[-1] and deorbit_time_hours < 10000:  # reasonable range
-            print(f"Polynomial regression prediction:")
+        from scipy.optimize import fsolve
+        guess = max(time_hours[-1] + 10, 1.0)
+        roots = fsolve(altitude_func, [guess, guess+100, guess+1000, guess+10000])
+        # Only consider real, positive roots in the future
+        future_roots = [r for r in roots if np.isreal(r) and r > time_hours[-1]]
+        results_dir = 'results'
+        if not os.path.exists(results_dir):
+            os.makedirs(results_dir)
+        prediction_path = os.path.join(results_dir, 'deorbit_prediction.csv')
+        if future_roots:
+            deorbit_time_hours = float(np.min(future_roots))
+            print(f"Cubic regression prediction:")
             print(f"  Altitude trend: {coeffs_alt[0]:.5f}t³ + {coeffs_alt[1]:.5f}t² + {coeffs_alt[2]:.5f}t + {coeffs_alt[3]:.5f}")
             print(f"  Predicted deorbit time: {deorbit_time_hours:.2f} hours ({deorbit_time_hours/24:.2f} days)")
             print(f"  Time to deorbit: {deorbit_time_hours - time_hours[-1]:.2f} hours")
-            
-            # Calculate deorbit rate
             deorbit_rate = (altitudes[0] - TERMINATION_ALTITUDE/1000) / deorbit_time_hours  # km/hour
             print(f"  Average deorbit rate: {deorbit_rate:.5f} km/hour")
-            
-            # Save prediction to CSV
             prediction_data = {
                 'Metric': [
                     'Current Simulation Time (hours)',
@@ -224,21 +282,32 @@ def predict_deorbit_time(time_data, mhd_states):
                     f"{coeffs_alt[3]:.5f}"
                 ]
             }
-            
             prediction_df = pd.DataFrame(prediction_data)
-            prediction_df.to_csv('deorbit_prediction.csv', index=False)
-            print(f"  Deorbit prediction saved to deorbit_prediction.csv")
-            
+            prediction_df.to_csv(prediction_path, index=False)
+            print(f"  Deorbit prediction saved to {prediction_path}")
         else:
-            print(f"Polynomial regression prediction: No reasonable deorbit time found")
-            print(f"  Altitude trend: {coeffs_alt[0]:.5f}t³ + {coeffs_alt[1]:.5f}t² + {coeffs_alt[2]:.5f}t + {coeffs_alt[3]:.5f}")
-            print(f"  Current altitude: {current_altitude:.2f} km")
-            print(f"  Altitude change rate: {coeffs_alt[2]:.5f} km/hour")
-            print(f"  Deorbit boundary: {TERMINATION_ALTITUDE/1000:.1f} km")
-            print(f"  Note: Satellite may not deorbit within reasonable timeframe")
-            
+            print("Not enough data to find deorbit time.")
+            prediction_data = {
+                'Metric': ['Deorbit Prediction'],
+                'Value': ['Not enough data to find deorbit time']
+            }
+            prediction_df = pd.DataFrame(prediction_data)
+            prediction_df.to_csv(prediction_path, index=False)
+            print(f"  Deorbit prediction saved to {prediction_path}")
     except Exception as e:
         print(f"Error in polynomial regression: {e}")
         print(f"Current altitude: {current_altitude:.2f} km")
         print(f"Altitude change over simulation: {altitudes[0] - altitudes[-1]:.2f} km")
-        print(f"Deorbit boundary: {TERMINATION_ALTITUDE/1000:.1f} km") 
+        print(f"Deorbit boundary: {TERMINATION_ALTITUDE/1000:.1f} km")
+        # Always output a CSV, even on error
+        results_dir = 'results'
+        if not os.path.exists(results_dir):
+            os.makedirs(results_dir)
+        prediction_path = os.path.join(results_dir, 'deorbit_prediction.csv')
+        prediction_data = {
+            'Metric': ['Deorbit Prediction'],
+            'Value': [f'Error: {e}']
+        }
+        prediction_df = pd.DataFrame(prediction_data)
+        prediction_df.to_csv(prediction_path, index=False)
+        print(f"  Deorbit prediction saved to {prediction_path}") 
