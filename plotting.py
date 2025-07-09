@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from constants import R_EARTH, TERMINATION_ALTITUDE, TWO_PI
+from config import R_EARTH, TERMINATION_ALTITUDE, TWO_PI
 
 def plot_power_comparison(time_data, mhd_power, solar_power, save_path='plots/power_comparison.png'):
     """

@@ -1,14 +1,34 @@
+"""
+Physics calculations for Sprint Satellite simulation.
+
+This module contains all physics calculations including orbital dynamics,
+MHD generator physics, plasma physics, and ionospheric modeling.
+"""
+
 import numpy as np
-from constants import (MU, R_EARTH, ELECTRODE_DISTANCE, GENERATOR_LENGTH, MAGNETIC_DISTANCE,
-                      MHD_MAGNET_STRENGTH, MHD_CONDUCTOR_RESISTIVITY, 
-                      MHD_CONDUCTOR_DIAMETER, MHD_CIRCUIT_RESISTANCE,
-                      ELECTRON_CHARGE, ELECTRON_MASS, BOLTZMANN_CONSTANT, PLASMA_TEMPERATURE,
-                      INITIAL_ALTITUDE, INCLINATION_DEG, F107A, F107, AP)
 import PyIRI
 import PyIRI.edp_update as ml
+from config import (MU, R_EARTH, ELECTRODE_DISTANCE, GENERATOR_LENGTH, MAGNETIC_DISTANCE,
+                   MHD_MAGNET_STRENGTH, MHD_CONDUCTOR_RESISTIVITY, 
+                   MHD_CONDUCTOR_DIAMETER, MHD_CIRCUIT_RESISTANCE,
+                   ELECTRON_CHARGE, ELECTRON_MASS, BOLTZMANN_CONSTANT, PLASMA_TEMPERATURE)
+
 
 def orbital_ode_standard(t, state, satellite, sim_datetime, sun_vector, f107a, f107, ap):
-    """Standard solar satellite ODE - gravitational forces only."""
+    """
+    Standard solar satellite ODE - gravitational forces only.
+    
+    Args:
+        t: Time (unused but required by ODE solver)
+        state: State vector [x, y, z, vx, vy, vz]
+        satellite: Satellite object
+        sim_datetime: Simulation datetime
+        sun_vector: Sun direction vector
+        f107a, f107, ap: Space weather parameters (unused)
+        
+    Returns:
+        np.ndarray: State derivative [vx, vy, vz, ax, ay, az]
+    """
     r = state[:3]
     v = state[3:]
     
@@ -18,8 +38,22 @@ def orbital_ode_standard(t, state, satellite, sim_datetime, sun_vector, f107a, f
     
     return np.concatenate([v, a_grav])
 
+
 def orbital_ode_sprint(t, state, satellite, sim_datetime, sun_vector, f107a, f107, ap):
-    """MHD sprint satellite ODE - includes MHD generator drag forces."""
+    """
+    MHD sprint satellite ODE - includes MHD generator drag forces.
+    
+    Args:
+        t: Time (unused but required by ODE solver)
+        state: State vector [x, y, z, vx, vy, vz]
+        satellite: Satellite object
+        sim_datetime: Simulation datetime
+        sun_vector: Sun direction vector
+        f107a, f107, ap: Space weather parameters
+        
+    Returns:
+        np.ndarray: State derivative [vx, vy, vz, ax, ay, az]
+    """
     r = state[:3]
     v = state[3:]
     
@@ -33,10 +67,18 @@ def orbital_ode_sprint(t, state, satellite, sim_datetime, sun_vector, f107a, f10
     
     return np.concatenate([v, a_grav + a_mhd])
 
+
 def get_ionospheric_data(state, sim_datetime, f107a, f107, ap):
     """
     Get ionospheric plasma density and magnetic field using PyIRI.
-    Returns both electron density (m^-3) and magnetic field (Tesla).
+    
+    Args:
+        state: State vector [x, y, z, vx, vy, vz]
+        sim_datetime: Simulation datetime
+        f107a, f107, ap: Space weather parameters
+        
+    Returns:
+        tuple: (electron_density_m3, magnetic_field_T)
     """
     r = state[:3]
     altitude_km = (np.linalg.norm(r) - R_EARTH) / 1000.0
@@ -72,14 +114,12 @@ def get_ionospheric_data(state, sim_datetime, f107a, f107, ap):
     modip = mag['modip'][0] # Modified dip angle in degrees
     mag_dip_lat = mag['mag_dip_lat'][0]  # Magnetic dip latitude in degrees
     
-
     inc_rad = np.radians(inc)
     modip_rad = np.radians(modip)
     
     r_mag = np.linalg.norm(r)
     B_magnitude = 3.12e-5 * (R_EARTH / r_mag)**3  # Approximate Earth's dipole field
     
-
     B_horizontal = B_magnitude * np.cos(inc_rad)
     B_vertical = B_magnitude * np.sin(inc_rad)
     
@@ -87,8 +127,18 @@ def get_ionospheric_data(state, sim_datetime, f107a, f107, ap):
     
     return n_e, B_T
 
+
 def calculate_plasma_conductivity(n_e, T_e):
-    """Calculate plasma conductivity using Spitzer formula."""
+    """
+    Calculate plasma conductivity using Spitzer formula.
+    
+    Args:
+        n_e: Electron density (m^-3)
+        T_e: Electron temperature (K)
+        
+    Returns:
+        float: Plasma conductivity (S/m)
+    """
     ln_Lambda = 10.0
     epsilon_0 = 8.854e-12  # F/m
     nu_ei = (4 * np.pi * n_e * ELECTRON_CHARGE**4 * ln_Lambda) / \
@@ -99,8 +149,19 @@ def calculate_plasma_conductivity(n_e, T_e):
     
     return sigma
 
+
 def calculate_mhd_generator_drag_force(state, sim_datetime, f107a, f107, ap):
-    """Calculate MHD generator drag force."""
+    """
+    Calculate MHD generator drag force.
+    
+    Args:
+        state: State vector [x, y, z, vx, vy, vz]
+        sim_datetime: Simulation datetime
+        f107a, f107, ap: Space weather parameters
+        
+    Returns:
+        np.ndarray: Drag force vector (N)
+    """
     # Get ionospheric data
     n_e, B_earth = get_ionospheric_data(state, sim_datetime, f107a, f107, ap)
     
@@ -151,8 +212,19 @@ def calculate_mhd_generator_drag_force(state, sim_datetime, f107a, f107, ap):
     
     return F_drag
 
+
 def calculate_mhd_generator_power(state, sim_datetime, f107a, f107, ap):
-    """Calculate power generated by MHD generator."""
+    """
+    Calculate power generated by MHD generator.
+    
+    Args:
+        state: State vector [x, y, z, vx, vy, vz]
+        sim_datetime: Simulation datetime
+        f107a, f107, ap: Space weather parameters
+        
+    Returns:
+        float: Power generated (W)
+    """
     # Get ionospheric data
     n_e, B_earth = get_ionospheric_data(state, sim_datetime, f107a, f107, ap)
     
@@ -200,6 +272,15 @@ def calculate_mhd_generator_power(state, sim_datetime, f107a, f107, ap):
     
     return P_generated
 
+
 def get_ode_function(is_sprint_sat):
-    """Get appropriate ODE function based on satellite type."""
-    return orbital_ode_sprint if is_sprint_sat else orbital_ode_standard
+    """
+    Get appropriate ODE function based on satellite type.
+    
+    Args:
+        is_sprint_sat: True if MHD Sprint Satellite, False if standard solar
+        
+    Returns:
+        function: ODE function to use
+    """
+    return orbital_ode_sprint if is_sprint_sat else orbital_ode_standard 

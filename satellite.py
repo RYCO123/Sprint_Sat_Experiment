@@ -1,7 +1,7 @@
 import numpy as np
-from constants import (MASS_1U, SOLAR_POWER_PEAK, SOLAR_EFFICIENCY)
-from helpers import calculate_circular_orbit_conditions, check_eclipse
-from ODE import calculate_mhd_generator_power
+from config import (MASS_1U, SOLAR_POWER_PEAK, SOLAR_EFFICIENCY, R_EARTH)
+from utils import calculate_circular_orbit_conditions, check_eclipse
+from physics import calculate_mhd_generator_power
 
 class Satellite:
     """Satellite class with power generation based on type."""
