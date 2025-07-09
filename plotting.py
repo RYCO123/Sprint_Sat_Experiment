@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from constants import R_EARTH, TERMINATION_ALTITUDE
+from constants import R_EARTH, TERMINATION_ALTITUDE, TWO_PI
 
 def plot_power_comparison(time_data, mhd_power, solar_power, save_path='plots/power_comparison.png'):
     """
@@ -140,7 +140,7 @@ def plot_orbital_trajectories_3d(mhd_states, solar_states, save_path='plots/orbi
            label='Standard Solar Satellite', linewidth=2, color='blue')
     
     # Add Earth as a sphere
-    u = np.linspace(0, 2 * np.pi, 100)
+    u = np.linspace(0, TWO_PI, 100)
     v = np.linspace(0, np.pi, 100)
     x = R_EARTH/1000 * np.outer(np.cos(u), np.sin(v))
     y = R_EARTH/1000 * np.outer(np.sin(u), np.sin(v))

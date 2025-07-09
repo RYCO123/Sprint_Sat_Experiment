@@ -119,7 +119,12 @@ The simulation demonstrates:
 
 This simulation is based on the comprehensive treatment of electromechanical systems presented in:
 
-**Woodson, Herbert H., and James R. Melcher. Electromechanical Dynamics. Part III: Elastic and Fluid Media.** Massachusetts Institute of Technology: MIT OpenCourseWare. https://ocw.mit.edu/ans7870/resources/woodson/textbook/emd_part3.pdf
+**Woodson, Herbert H., and James R. Melcher. Electromechanical Dynamics. Part III: Elastic and Fluid Media.** Massachusetts Institute of Technology: MIT OpenCourseWare. 
+
+
+https://ocw.mit.edu/ans7870/resources/woodson/textbook/emd_part1.pdf
+https://ocw.mit.edu/ans7870/resources/woodson/textbook/emd_part2.pdf
+https://ocw.mit.edu/ans7870/resources/woodson/textbook/emd_part3.pdf
 
 Key theoretical concepts implemented:
 
@@ -138,7 +143,7 @@ The MHD generator design follows the principles of traveling-wave MHD interactio
 - Polynomial regression for deorbit prediction
 - Comprehensive error handling and fallback models
 
-### Performance Characteristics
+### Performance Characteristics for the .001 magnetic field (reasonable max power output)
 - **MHD Power Generation**: 22.5x higher than solar satellite
 - **Energy Efficiency**: 21.8x more total energy
 - **Orbital Decay Rate**: ~0.89 km/hour average

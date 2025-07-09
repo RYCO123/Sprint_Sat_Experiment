@@ -1,5 +1,5 @@
 import numpy as np
-from constants import (MASS_1U, AREA_1U, DRAG_COEFFICIENT, SOLAR_POWER_PEAK, SOLAR_EFFICIENCY)
+from constants import (MASS_1U, SOLAR_POWER_PEAK, SOLAR_EFFICIENCY)
 from helpers import calculate_circular_orbit_conditions, check_eclipse
 from ODE import calculate_mhd_generator_power
 
@@ -10,8 +10,6 @@ class Satellite:
         self.name = name
         self.is_sprint_sat = is_sprint_sat
         self.mass = MASS_1U
-        self.area = AREA_1U
-        self.c_d = DRAG_COEFFICIENT
         
         # Initialize orbital state
         self.initial_conditions = calculate_circular_orbit_conditions()
@@ -68,7 +66,7 @@ class Satellite:
             return 0.0
         
         current_state = self.state_history[-1]
-        return np.linalg.norm(current_state[:3]) - 6371000  # R_EARTH
+        return np.linalg.norm(current_state[:3]) - R_EARTH
     
     def get_average_power(self):
         """Calculate average power over the mission."""

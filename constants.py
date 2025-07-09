@@ -1,3 +1,5 @@
+import numpy as np
+
 # --- Physical Constants ---
 G = 6.67430e-11  # Gravitational constant (m³/kg/s²)
 M_EARTH = 5.972e24  # Earth's mass (kg)
@@ -6,8 +8,6 @@ MU = G * M_EARTH  # Earth's gravitational parameter (m³/s²)
 
 # --- 1U CubeSat Parameters ---
 MASS_1U = 1.33  # kg
-AREA_1U = 0.01  # m² (cross-sectional area)
-DRAG_COEFFICIENT = 2.2
 
 # --- MHD Generator Parameters ---
 ELECTRODE_DISTANCE = 0.1  # m (distance between perpendicular electrodes)
@@ -25,7 +25,6 @@ BOLTZMANN_CONSTANT = 1.381e-23  # J/K
 PLASMA_TEMPERATURE = 1000  # K (typical ionospheric temperature)
 
 # --- Solar Satellite Parameters ---
-SOLAR_POWER_AVERAGE = 2.5  # W (average for 1U satellite)
 SOLAR_POWER_PEAK = 10.0  # W (peak power)
 SOLAR_EFFICIENCY = 0.25  # 25% average efficiency
 
@@ -35,7 +34,6 @@ INCLINATION_DEG = 20.0  # degrees
 TERMINATION_ALTITUDE = 60.1e3  # m (60.1 km - deorbit boundary)
 
 # --- Simulation Parameters ---
-TIME_STEP = 10.0  # s
 SIMULATION_START_DATE = "2024-03-01"
 
 # --- Space Weather Parameters (Default Values) ---
@@ -43,5 +41,7 @@ F107A = 150.0  # F10.7 81-day average (solar flux units)
 F107 = 150.0   # F10.7 daily (solar flux units)
 AP = 4.0       # Ap index (geomagnetic activity)
 
-# --- API Caching ---
-CACHE_EXPIRATION_SECONDS = 600 
+# --- Time Constants ---
+SECONDS_PER_DAY = 86400.0  # seconds in a day
+DAYS_PER_YEAR = 365.25  # days in a year (including leap years)
+TWO_PI = 2 * np.pi  # 2π for angular calculations 

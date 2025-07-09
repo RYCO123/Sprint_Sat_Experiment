@@ -1,16 +1,14 @@
 import numpy as np
 import pandas as pd
 from scipy.integrate import solve_ivp
-from datetime import datetime, timedelta
-from tqdm.auto import tqdm
 from datetime import datetime
+from tqdm.auto import tqdm
 import os
-from constants import TIME_STEP, SIMULATION_START_DATE, TERMINATION_ALTITUDE
+from constants import SIMULATION_START_DATE, TERMINATION_ALTITUDE, R_EARTH, INITIAL_ALTITUDE
 from satellite import Satellite
 from ODE import get_ode_function
 from helpers import get_space_weather_data, calculate_sun_vector
-from plotting import (plot_power_comparison, plot_total_energy_comparison, 
-                     plot_orbital_trajectories_2d, plot_orbital_trajectories_3d,
+from plotting import (plot_orbital_trajectories_2d, plot_orbital_trajectories_3d,
                      plot_altitude_comparison, create_comprehensive_comparison)
 
 class Simulation:
@@ -190,8 +188,8 @@ class Simulation:
         # Final altitudes
         final_mhd_state = self.mhd_states[-1]
         final_solar_state = self.solar_states[-1]
-        final_mhd_alt = np.linalg.norm(final_mhd_state[:3]) - 6371000
-        final_solar_alt = np.linalg.norm(final_solar_state[:3]) - 6371000
+        final_mhd_alt = np.linalg.norm(final_mhd_state[:3]) - R_EARTH
+        final_solar_alt = np.linalg.norm(final_solar_state[:3]) - R_EARTH
         
         # Average powers
         avg_mhd_power = np.mean(self.mhd_power)
@@ -213,7 +211,7 @@ class Simulation:
             ],
             'MHD Sprint Satellite': [
                 f"{mission_duration_hours:.5f}",
-                f"400.00000",
+                f"{INITIAL_ALTITUDE/1000:.5f}",
                 f"{final_mhd_alt/1000:.5f}",
                 f"{avg_mhd_power:.5f}",
                 f"{total_mhd_energy:.5f}",
@@ -222,7 +220,7 @@ class Simulation:
             ],
             'Standard Solar Satellite': [
                 f"{mission_duration_hours:.5f}",
-                f"400.00000",
+                f"{INITIAL_ALTITUDE/1000:.5f}",
                 f"{final_solar_alt/1000:.5f}",
                 f"{avg_solar_power:.5f}",
                 f"{total_solar_energy:.5f}",
@@ -255,7 +253,7 @@ class Simulation:
         
         # Calculate altitudes over time for MHD satellite specifically
         time_hours = np.array(self.time_data) / 3600
-        altitudes = np.array([np.linalg.norm(state[:3]) - 6371000 for state in self.mhd_states]) / 1000  # km
+        altitudes = np.array([np.linalg.norm(state[:3]) - R_EARTH for state in self.mhd_states]) / 1000  # km
         
         # Check if satellite has already deorbited during simulation
         min_altitude = np.min(altitudes)
@@ -394,22 +392,12 @@ class Simulation:
 
 def main():
     """Main function to run the complete simulation."""
-    # Create simulation instance
     sim = Simulation()
-    
-    # Run simulation for 1 week with 3000 discrete time steps
     t_span = (0, 3600*24)
     num_steps = int(t_span[1] / 180) 
-    
-    # Run simulation
     sim.run_simulation(t_span, num_steps)
-    
-    # Generate plots
     sim.generate_plots()
-    
-    # Generate summary
     sim.generate_summary()
-    
     print("\nSimulation complete")
 
 if __name__ == "__main__":
