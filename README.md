@@ -247,7 +247,6 @@ The MHD generator design follows the principles of traveling-wave MHD interactio
 
 - Modular Python package structure for clarity and maintainability
 - Direct PyIRI calls for each evaluation step (no caching)
-- Real-time ionospheric data integration
 - Polynomial regression for deorbit prediction
 
 ### Unique Design Features
