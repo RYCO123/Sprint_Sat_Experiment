@@ -169,11 +169,11 @@ Below are the results for each run, with plots and summary statistics. The numbe
 
 ![Comprehensive Comparison Plot](plots_0-4x/comprehensive_comparison.png)
 
-- **Average Power Generated (W):** MHD: 0.01908, Solar: 0.04630
-- **Total Energy Generated (Wh):** MHD: 0.45791, Solar: 1.11345
-- **Power Ratio (MHD/Solar):** 0.41x
-- **Energy Ratio (MHD/Solar):** 0.41x
-- **Deorbit prediction:** ~67.8 days to deorbit from 400 km (average deorbit rate: 0.21 km/hour)
+- **Average Power Generated (W):** MHD: 0.01961, Solar: 0.04630
+- **Total Energy Generated (Wh):** MHD: 0.47081, Solar: 1.11345
+- **Power Ratio (MHD/Solar):** 0.42x
+- **Energy Ratio (MHD/Solar):** 0.42x
+- **Deorbit prediction:** ~67.2 days to deorbit from 400 km (average deorbit rate: 0.21 km/hour)
 - **Power output was more stable over time compared to the solar satellite, despite lower magnitude.**
 
 ### 1.4x Power Run
@@ -187,6 +187,17 @@ Below are the results for each run, with plots and summary statistics. The numbe
 - **Deorbit prediction:** ~44 days to deorbit from 400 km (average deorbit rate: 0.32 km/hour)
 - **Power output remained more stable than solar, with less dependence on sun position.**
 
+### 2.4x Power Run
+
+![Comprehensive Comparison Plot](plots_2-4x/comprehensive_comparison.png)
+
+- **Average Power Generated (W):** MHD: 0.10952, Solar: 0.04630
+- **Total Energy Generated (Wh):** MHD: 2.62880, Solar: 1.11345
+- **Power Ratio (MHD/Solar):** 2.37x
+- **Energy Ratio (MHD/Solar):** 2.36x
+- **Deorbit prediction:** ~36.2 days to deorbit from 400 km (average deorbit rate: 0.38 km/hour)
+- **Power output was consistently stable, with moderate altitude loss due to drag.**
+
 ### 6.8x Power Run
 
 ![Comprehensive Comparison Plot](plots_6-8x/comprehensive_comparison.png)
@@ -198,6 +209,17 @@ Below are the results for each run, with plots and summary statistics. The numbe
 - **Deorbit prediction:** ~23 days to deorbit from 400 km (average deorbit rate: 0.59 km/hour)
 - **Power output was consistently stable, with rapid altitude loss due to drag.**
 
+### 7.6x Power Run
+
+![Comprehensive Comparison Plot](plots_7-6x/comprehensive_comparison.png)
+
+- **Average Power Generated (W):** MHD: 0.35221, Solar: 0.04630
+- **Total Energy Generated (Wh):** MHD: 8.45402, Solar: 1.11345
+- **Power Ratio (MHD/Solar):** 7.61x
+- **Energy Ratio (MHD/Solar):** 7.59x
+- **Deorbit prediction:** ~21.8 days to deorbit from 400 km (average deorbit rate: 0.62 km/hour)
+- **Power output was highly stable, with accelerated orbital decay.**
+
 ### 27.4x Power Run
 
 ![Comprehensive Comparison Plot](plots_27-4x/comprehensive_comparison.png)
@@ -208,6 +230,17 @@ Below are the results for each run, with plots and summary statistics. The numbe
 - **Energy Ratio (MHD/Solar):** 27.34x
 - **Deorbit prediction:** ~10.4 days to deorbit from 400 km (average deorbit rate: 1.25 km/hour)
 - **Power output was highly stable, but the satellite deorbited extremely quickly.**
+
+### 30.6x Power Run
+
+![Comprehensive Comparison Plot](plots_30-6x/comprehensive_comparison.png)
+
+- **Average Power Generated (W):** MHD: 1.41778, Solar: 0.04630
+- **Total Energy Generated (Wh):** MHD: 34.03123, Solar: 1.11345
+- **Power Ratio (MHD/Solar):** 30.62x
+- **Energy Ratio (MHD/Solar):** 30.56x
+- **Deorbit prediction:** ~9.6 days to deorbit from 400 km (average deorbit rate: 1.34 km/hour)
+- **Power output was extremely stable, with the fastest deorbit rate observed.**
 
 ---
 
