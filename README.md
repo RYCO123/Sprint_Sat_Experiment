@@ -249,14 +249,6 @@ The MHD generator design follows the principles of traveling-wave MHD interactio
 - Direct PyIRI calls for each evaluation step (no caching)
 - Real-time ionospheric data integration
 - Polynomial regression for deorbit prediction
-- Comprehensive error handling and fallback models
-
-### Performance Characteristics for the 0.01 Tesla magnetic field
-
-- **MHD Power Generation**: 22–27x higher than solar satellite
-- **Energy Efficiency**: 21–27x more total energy
-- **Orbital Decay Rate**: ~0.89–1.25 km/hour average
-- **Simulation Speed**: Real-time PyIRI integration
 
 ### Unique Design Features
 
