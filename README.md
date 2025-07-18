@@ -2,10 +2,8 @@
 
 A comprehensive orbital simulation comparing an MHD (Magnetohydrodynamic) Sprint Satellite with a standard solar-powered satellite. The MHD Sprint Satellite uses a compact MHD generator integrated into a 1U CubeSat to extract power from ionospheric plasma flow while generating orbital drag for controlled deorbiting.
 
-**GitHub Repository:**  
-[https://github.com/RYCO123/Sprint_Sat_Experiment](https://github.com/RYCO123/Sprint_Sat_Experiment)
-
 ---
+<img width="904" height="529" alt="diagram" src="https://github.com/user-attachments/assets/65b84579-3bff-4319-abef-bb783bf96ce6" />
 
 ## System Overview
 
