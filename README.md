@@ -13,6 +13,18 @@ This project simulates two satellites in Low Earth Orbit (LEO):
 2. **Standard Solar Satellite**: Traditional solar-powered 1U CubeSat for comparison
 
 ---
+ 
+## Key Assumptions
+
+Deorbit Condition is reached when altitude < 60km.
+Both Sprint and Standard Satellites have the same mass.
+The Standard Satellite experiences no drag, the Spring Satellite only experiences MHD drag
+Ionosphere conditions and solar activity were both modeled with python libraries
+Time step of the ODE solver is approximately one step every 3 minutes, benchmarked against a circular orbit which maintained reasonably for a simulated month
+B field of the Spring Satellite is the sum of the induced magnetic field of the Satellite + the vector of earths magnetic field that is relevant to the MHD
+The system is defined for the B field to be the nob. Increasing it increases power produciton but increases drag. Models could alos be developed, changing electrode length to adjust power.
+
+---
 
 ## Project Structure
 
@@ -257,9 +269,6 @@ The MHD generator design follows the principles of traveling-wave MHD interactio
 ## About
 
 An experiment to determine the viability of an MHD sprint satellite concept. A satellite that could generate significantly more power for the same form factor while generating increased drag, decreasing orbital time.
-
-**GitHub Repository:**  
-[https://github.com/RYCO123/Sprint_Sat_Experiment](https://github.com/RYCO123/Sprint_Sat_Experiment)
 
 ---
 
